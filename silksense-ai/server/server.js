@@ -6,6 +6,13 @@ const WebSocket = require('ws');
 const path      = require('path');
 const { initDB } = require('./db');
 
+// Fail fast with a clear message if DB URL is missing
+if (!process.env.DATABASE_URL) {
+  console.error('[Server] ERROR: DATABASE_URL environment variable is not set.');
+  console.error('[Server] On Railway: add a PostgreSQL database to your project.');
+  process.exit(1);
+}
+
 const app    = express();
 const server = http.createServer(app);
 const wss    = new WebSocket.Server({ server });
