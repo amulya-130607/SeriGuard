@@ -13,7 +13,6 @@ router.post('/:name', async (req, res) => {
     const { state } = req.body;
     if (typeof state !== 'boolean')
       return res.status(400).json({ error: '"state" must be boolean' });
-
     const devices = await Devices.set(name, state);
     req.app.locals.broadcast({ type: 'device', name, state });
     res.json({ ok: true, name, state, devices });

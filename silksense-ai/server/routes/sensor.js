@@ -19,32 +19,24 @@ function checkThresholds({ temperature, humidity, airQuality }) {
   return alerts;
 }
 
-// POST /api/sensor  — called by ESP32
 router.post('/', async (req, res) => {
   try {
     const { temperature, humidity, airQuality } = req.body;
     if (temperature == null || humidity == null || airQuality == null)
       return res.status(400).json({ error: 'Missing sensor fields' });
-
     const reading   = await Sensors.insert({ temperature, humidity, airQuality });
     const triggered = checkThresholds({ temperature, humidity, airQuality });
     if (triggered.length) await Alerts.insert(triggered);
-
     req.app.locals.broadcast({ type: 'sensor', data: reading, alerts: triggered });
     res.json({ ok: true, id: reading._id, alerts: triggered.length });
-  } catch (err) {
-    console.error('[POST /sensor]', err.message);
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// GET /api/sensor/latest
 router.get('/latest', async (req, res) => {
   try { res.json(await Sensors.latest() || {}); }
   catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// GET /api/sensor/history?hours=24
 router.get('/history', async (req, res) => {
   try { res.json(await Sensors.history(parseInt(req.query.hours) || 24)); }
   catch (err) { res.status(500).json({ error: err.message }); }

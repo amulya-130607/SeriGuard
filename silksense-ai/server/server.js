@@ -6,13 +6,6 @@ const WebSocket = require('ws');
 const path      = require('path');
 const { initDB } = require('./db');
 
-// Fail fast with a clear message if DB URL is missing
-if (!process.env.DATABASE_URL) {
-  console.error('[Server] ERROR: DATABASE_URL environment variable is not set.');
-  console.error('[Server] On Railway: add a PostgreSQL database to your project.');
-  process.exit(1);
-}
-
 const app    = express();
 const server = http.createServer(app);
 const wss    = new WebSocket.Server({ server });
@@ -21,7 +14,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..')));
 
-// ── WebSocket broadcast ───────────────────────────────────────────────────────
 app.locals.broadcast = (payload) => {
   const msg = JSON.stringify(payload);
   wss.clients.forEach(client => {
@@ -30,24 +22,20 @@ app.locals.broadcast = (payload) => {
 };
 
 wss.on('connection', (ws) => {
-  console.log(`[WS] Client connected  (total: ${wss.clients.size})`);
+  console.log(`[WS] Client connected (total: ${wss.clients.size})`);
   ws.on('close', () => console.log(`[WS] Client disconnected (total: ${wss.clients.size})`));
 });
 
-// ── Routes ────────────────────────────────────────────────────────────────────
 app.use('/api/sensor',  require('./routes/sensor'));
 app.use('/api/devices', require('./routes/devices'));
 app.use('/api/alerts',  require('./routes/alerts'));
 app.get('/api/health',  (req, res) => res.json({ ok: true, time: new Date().toISOString() }));
 
-// ── Start ─────────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 
 initDB().then(() => {
-  server.listen(PORT, () => {
-    console.log(`[Server] Running on port ${PORT}`);
-  });
+  server.listen(PORT, () => console.log(`[Server] Running on port ${PORT}`));
 }).catch(err => {
-  console.error('[Server] DB init failed:', err.message);
+  console.error('[DB] Failed to connect:', err.message);
   process.exit(1);
 });

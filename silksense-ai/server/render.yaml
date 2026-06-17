@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: silksense-ai
+    runtime: node
+    rootDir: silksense-ai/server
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false

@@ -1,83 +1,114 @@
-// File-based storage using JSON — persisted on Render's disk
-const fs   = require('fs');
-const path = require('path');
+// PostgreSQL via 'pg' — works with Neon, Supabase, or any Postgres
+const { Pool } = require('pg');
 
-const DATA_DIR = path.join(__dirname, 'data');
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false } // required for Neon/Supabase
+});
 
-const FILES = {
-  sensors: path.join(DATA_DIR, 'sensors.json'),
-  devices: path.join(DATA_DIR, 'devices.json'),
-  alerts:  path.join(DATA_DIR, 'alerts.json'),
-};
-
-function read(file) {
-  try { return JSON.parse(fs.readFileSync(file, 'utf8')); }
-  catch { return []; }
-}
-
-function write(file, data) {
-  fs.writeFileSync(file, JSON.stringify(data));
+async function initDB() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS sensor_readings (
+      id          SERIAL PRIMARY KEY,
+      temperature REAL    NOT NULL,
+      humidity    REAL    NOT NULL,
+      air_quality INTEGER NOT NULL,
+      timestamp   TIMESTAMPTZ DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS devices (
+      name       TEXT PRIMARY KEY,
+      state      BOOLEAN DEFAULT FALSE,
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS alerts (
+      id           SERIAL PRIMARY KEY,
+      type         TEXT NOT NULL,
+      msg          TEXT NOT NULL,
+      param        TEXT,
+      acknowledged BOOLEAN DEFAULT FALSE,
+      timestamp    TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+  // Seed default devices
+  await pool.query(`
+    INSERT INTO devices (name, state) VALUES
+      ('fan', false), ('humidifier', false), ('exhaustFan', false), ('buzzer', false)
+    ON CONFLICT (name) DO NOTHING;
+  `);
+  console.log('[DB] Ready');
 }
 
 // ── Sensors ───────────────────────────────────────────────────────────────────
 const Sensors = {
-  insert(row) {
-    const rows = read(FILES.sensors);
-    const entry = { _id: Date.now().toString(), ...row, timestamp: new Date().toISOString() };
-    rows.push(entry);
-    if (rows.length > 10000) rows.splice(0, rows.length - 10000);
-    write(FILES.sensors, rows);
-    return entry;
+  async insert({ temperature, humidity, airQuality }) {
+    const { rows } = await pool.query(
+      `INSERT INTO sensor_readings (temperature, humidity, air_quality)
+       VALUES ($1, $2, $3) RETURNING *`,
+      [temperature, humidity, airQuality]
+    );
+    return toSensor(rows[0]);
   },
-  latest() {
-    const rows = read(FILES.sensors);
-    return rows.length ? rows[rows.length - 1] : null;
+  async latest() {
+    const { rows } = await pool.query(
+      `SELECT * FROM sensor_readings ORDER BY timestamp DESC LIMIT 1`
+    );
+    return rows.length ? toSensor(rows[0]) : null;
   },
-  history(hours = 24) {
-    const since = new Date(Date.now() - hours * 3600 * 1000).toISOString();
-    return read(FILES.sensors).filter(r => r.timestamp >= since);
+  async history(hours = 24) {
+    const { rows } = await pool.query(
+      `SELECT * FROM sensor_readings
+       WHERE timestamp >= NOW() - ($1 || ' hours')::INTERVAL
+       ORDER BY timestamp ASC`,
+      [hours]
+    );
+    return rows.map(toSensor);
   }
 };
 
-// ── Devices ───────────────────────────────────────────────────────────────────
-const DEFAULT_DEVICES = { fan: false, humidifier: false, exhaustFan: false, buzzer: false };
+function toSensor(r) {
+  return { _id: r.id, temperature: r.temperature, humidity: r.humidity, airQuality: r.air_quality, timestamp: r.timestamp };
+}
 
+// ── Devices ───────────────────────────────────────────────────────────────────
 const Devices = {
-  getAll() {
-    try { return { ...DEFAULT_DEVICES, ...JSON.parse(fs.readFileSync(FILES.devices, 'utf8')) }; }
-    catch { return { ...DEFAULT_DEVICES }; }
+  async getAll() {
+    const { rows } = await pool.query(`SELECT name, state FROM devices`);
+    const map = {};
+    rows.forEach(r => { map[r.name] = r.state; });
+    return map;
   },
-  set(name, state) {
-    const devices = this.getAll();
-    devices[name] = state;
-    fs.writeFileSync(FILES.devices, JSON.stringify(devices));
-    return devices;
+  async set(name, state) {
+    await pool.query(
+      `INSERT INTO devices (name, state, updated_at) VALUES ($1, $2, NOW())
+       ON CONFLICT (name) DO UPDATE SET state = $2, updated_at = NOW()`,
+      [name, state]
+    );
+    return this.getAll();
   }
 };
 
 // ── Alerts ────────────────────────────────────────────────────────────────────
 const Alerts = {
-  getAll(limit = 50) {
-    return read(FILES.alerts).slice(-limit).reverse();
+  async getAll(limit = 50) {
+    const { rows } = await pool.query(
+      `SELECT * FROM alerts ORDER BY timestamp DESC LIMIT $1`, [limit]
+    );
+    return rows.map(r => ({ ...r, _id: r.id }));
   },
-  insert(rows) {
-    const all = read(FILES.alerts);
-    rows.forEach(r => all.push({
-      _id: Date.now().toString() + Math.random().toString(36).slice(2),
-      ...r,
-      timestamp: new Date().toISOString(),
-      acknowledged: false
-    }));
-    if (all.length > 500) all.splice(0, all.length - 500);
-    write(FILES.alerts, all);
+  async insert(alerts) {
+    for (const a of alerts) {
+      await pool.query(
+        `INSERT INTO alerts (type, msg, param) VALUES ($1, $2, $3)`,
+        [a.type, a.msg, a.param || null]
+      );
+    }
   },
-  acknowledge(id) {
-    const all = read(FILES.alerts);
-    const a = all.find(x => x._id === id);
-    if (a) { a.acknowledged = true; write(FILES.alerts, all); }
+  async acknowledge(id) {
+    await pool.query(`UPDATE alerts SET acknowledged = true WHERE id = $1`, [id]);
   },
-  clear() { write(FILES.alerts, []); }
+  async clear() {
+    await pool.query(`DELETE FROM alerts`);
+  }
 };
 
-module.exports = { Sensors, Devices, Alerts };
+module.exports = { initDB, Sensors, Devices, Alerts };
