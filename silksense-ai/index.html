@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SilkSense AI – Smart Sericulture Monitoring System</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="logo">🪲 SilkSense <span>AI</span></div>
+  <div class="nav-links">
+    <a href="index.html" class="active">Home</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="analytics.html">Analytics</a>
+    <a href="#features">Features</a>
+    <a href="#how-it-works">How It Works</a>
+  </div>
+  <div style="display:flex;align-items:center;gap:0.75rem;" id="nav-user">
+    <a href="auth.html"><button class="nav-btn outline">Login</button></a>
+    <a href="dashboard.html"><button class="nav-btn">Dashboard</button></a>
+  </div>
+  <div class="hamburger" onclick="toggleMobileNav()">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-text">
+      <div class="hero-badge">🌿 IoT-Powered Sericulture</div>
+      <h1>SilkSense <span>AI</span>: Smart Sericulture Monitoring System</h1>
+      <p>Monitor and automate silkworm rearing conditions in real time using IoT and AI. Reduce labor, maximize yield.</p>
+      <div class="hero-btns">
+        <a href="dashboard.html"><button class="btn btn-accent">📊 View Dashboard</button></a>
+        <a href="#how-it-works"><button class="btn btn-outline" style="color:#fff;border-color:rgba(255,255,255,0.5)">Learn More</button></a>
+        <a href="auth.html"><button class="btn btn-outline" style="color:#fff;border-color:rgba(255,255,255,0.5)">🔌 Connect Device</button></a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-card">
+        <h3>📡 Live Sensor Feed <span class="status-dot" style="margin-left:8px"></span></h3>
+        <div class="sensor-mini-grid">
+          <div class="sensor-mini">
+            <div class="icon">🌡️</div>
+            <div class="val" id="hero-temp">26.4°C</div>
+            <div class="lbl">Temperature</div>
+          </div>
+          <div class="sensor-mini">
+            <div class="icon">💧</div>
+            <div class="val" id="hero-hum">78%</div>
+            <div class="lbl">Humidity</div>
+          </div>
+          <div class="sensor-mini">
+            <div class="icon">🌫️</div>
+            <div class="val" id="hero-aq">Good</div>
+            <div class="lbl">Air Quality</div>
+          </div>
+          <div class="sensor-mini">
+            <div class="icon">⚡</div>
+            <div class="val" id="hero-dev">2 ON</div>
+            <div class="lbl">Devices Active</div>
+          </div>
+        </div>
+        <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.15)">
+          <canvas id="heroChart" height="80"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="section stats-bg">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-item"><div class="num">4</div><div class="desc">Sensors Monitored</div></div>
+      <div class="stat-item"><div class="num">4</div><div class="desc">Devices Controlled</div></div>
+      <div class="stat-item"><div class="num">24/7</div><div class="desc">Real-Time Monitoring</div></div>
+      <div class="stat-item"><div class="num">3s</div><div class="desc">Data Refresh Rate</div></div>
+      <div class="stat-item"><div class="num">AI</div><div class="desc">Predictive Alerts</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section section-center" id="features">
+  <div class="container">
+    <div class="section-tag">Features</div>
+    <h2>Everything you need to farm smarter</h2>
+    <p class="lead">A complete IoT platform purpose-built for sericulture farmers — from sensor data to device automation.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📡</div>
+        <h3>Real-Time Monitoring</h3>
+        <p>Live temperature, humidity, and air quality readings from ESP32 sensors, refreshed every 3 seconds.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎮</div>
+        <h3>Remote Device Control</h3>
+        <p>Toggle fan, humidifier, exhaust fan, and buzzer remotely from anywhere via relay module control.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🚨</div>
+        <h3>Smart Alerts</h3>
+        <p>Instant notifications when temperature or humidity drift outside safe ranges for silkworm rearing.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📈</div>
+        <h3>Historical Analytics</h3>
+        <p>View trends over time, export CSV/PDF reports, and analyze environmental patterns across days.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🤖</div>
+        <h3>AI Predictions</h3>
+        <p>Disease risk prediction, cocoon yield forecasting, and smart recommendations powered by ML models.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">☁️</div>
+        <h3>Cloud Integration</h3>
+        <p>Firebase, MQTT, ThingSpeak, and REST API support. ESP32 streams data continuously to the cloud.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔐</div>
+        <h3>Role-Based Access</h3>
+        <p>Admin and farmer roles with secure login, registration, and password recovery flows.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📱</div>
+        <h3>Mobile Responsive</h3>
+        <p>Fully responsive design — monitor your farm from phone, tablet, or desktop with equal ease.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section" id="how-it-works" style="background:var(--primary-dark);color:#fff;">
+  <div class="container section-center">
+    <div class="section-tag" style="background:rgba(255,255,255,0.15);color:#fff;">How It Works</div>
+    <h2 style="color:#fff;">From sensor to dashboard in seconds</h2>
+    <p class="lead" style="color:rgba(255,255,255,0.7);">The ESP32 reads sensor data and pushes it to the cloud. SilkSense AI picks it up and puts it in front of you instantly.</p>
+    <div class="features-grid" style="margin-top:2rem;">
+      <div class="feature-card" style="background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.15);">
+        <div class="feature-icon" style="background:rgba(255,255,255,0.15);">1️⃣</div>
+        <h3 style="color:#fff;">ESP32 Reads Sensors</h3>
+        <p style="color:rgba(255,255,255,0.7);">DHT11/DHT22 captures temperature & humidity. MQ-135 monitors air quality every few seconds.</p>
+      </div>
+      <div class="feature-card" style="background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.15);">
+        <div class="feature-icon" style="background:rgba(255,255,255,0.15);">2️⃣</div>
+        <h3 style="color:#fff;">Data Sent to Cloud</h3>
+        <p style="color:rgba(255,255,255,0.7);">ESP32 transmits via Wi-Fi to Firebase, MQTT broker, or your REST API endpoint in real time.</p>
+      </div>
+      <div class="feature-card" style="background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.15);">
+        <div class="feature-icon" style="background:rgba(255,255,255,0.15);">3️⃣</div>
+        <h3 style="color:#fff;">Dashboard Updates Live</h3>
+        <p style="color:rgba(255,255,255,0.7);">SilkSense AI fetches live data and renders sensor cards, charts, and alerts instantly — no refresh needed.</p>
+      </div>
+      <div class="feature-card" style="background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.15);">
+        <div class="feature-icon" style="background:rgba(255,255,255,0.15);">4️⃣</div>
+        <h3 style="color:#fff;">Farmer Takes Action</h3>
+        <p style="color:rgba(255,255,255,0.7);">Toggle devices remotely. Automated relays activate when thresholds are crossed. Alerts are sent instantly.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="section section-center" style="background:linear-gradient(135deg,var(--primary-light),var(--primary));">
+  <div class="container">
+    <h2 style="color:#fff;margin-bottom:1rem;">Ready to modernize your sericulture farm?</h2>
+    <p style="color:rgba(255,255,255,0.85);margin-bottom:2rem;">Connect your ESP32 and start monitoring in minutes.</p>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+      <a href="auth.html"><button class="btn" style="background:#fff;color:var(--primary-dark);">Get Started Free</button></a>
+      <a href="dashboard.html"><button class="btn btn-outline" style="color:#fff;border-color:rgba(255,255,255,0.6);">View Live Demo</button></a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-logo">🪲 SilkSense AI</div>
+  <p>Smart Sericulture Monitoring System — IoT + AI for modern silk farming</p>
+  <p style="margin-top:0.5rem;font-size:0.8rem;">ESP32 · DHT22 · MQ-135 · Firebase · MQTT · React Ready</p>
+</footer>
+
+<script src="mock-data.js"></script>
+<script src="app.js"></script>
+<script>
+  initNavbarUser();
+
+  // Hero mini chart
+  const heroCtx = document.getElementById('heroChart').getContext('2d');
+  const heroLabels = Array.from({length: 10}, (_, i) => `${i * 3}m ago`).reverse();
+  const heroData = Array.from({length: 10}, () => +(24 + Math.random() * 5).toFixed(1));
+  new Chart(heroCtx, {
+    type: 'line',
+    data: {
+      labels: heroLabels,
+      datasets: [{
+        data: heroData,
+        borderColor: 'rgba(255,255,255,0.8)',
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        fill: true, tension: 0.4, pointRadius: 0, borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true, plugins: { legend: { display: false } },
+      scales: { x: { display: false }, y: { display: false } }
+    }
+  });
+
+  // Animate hero sensor values
+  MockIoT.subscribe(data => {
+    document.getElementById('hero-temp').textContent = data.temperature + '°C';
+    document.getElementById('hero-hum').textContent = data.humidity + '%';
+    document.getElementById('hero-aq').textContent = MockIoT.getAirQualityLabel(data.airQuality).label;
+    const onCount = Object.values(data.devices).filter(Boolean).length;
+    document.getElementById('hero-dev').textContent = onCount + ' ON';
+  });
+  MockIoT.start();
+
+  function toggleMobileNav() {
+    document.querySelector('.nav-links').style.display =
+      document.querySelector('.nav-links').style.display === 'flex' ? 'none' : 'flex';
+  }
+</script>
+</body>
+</html>
