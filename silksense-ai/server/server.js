@@ -33,9 +33,15 @@ app.get('/api/health',  (req, res) => res.json({ ok: true, time: new Date().toIS
 
 const PORT = process.env.PORT || 3000;
 
+if (!process.env.DATABASE_URL) {
+  console.error('[FATAL] DATABASE_URL is not set. Add it in Render → Environment Variables.');
+  process.exit(1);
+}
+
 initDB().then(() => {
   server.listen(PORT, () => console.log(`[Server] Running on port ${PORT}`));
 }).catch(err => {
-  console.error('[DB] Failed to connect:', err.message);
+  console.error('[FATAL] DB connection failed:', err.message);
+  console.error('[HINT] Check your DATABASE_URL in Render environment variables.');
   process.exit(1);
 });
